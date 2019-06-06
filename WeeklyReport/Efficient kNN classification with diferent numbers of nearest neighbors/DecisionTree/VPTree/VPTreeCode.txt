@@ -1,0 +1,35 @@
+// 给定根结点，k值，查询点。
+function knn (root, k, query) {
+    var tau = Infinity;
+    var toSearch = [root];//待查找的结点列表，开始时只有根结点，后面可能继续加入其它结点。
+
+    // 将结果存储在长度为k的优先队列中。
+    // 按该点到查询点的距离来排序，于是优先队列中第一个点就是最近邻。
+    var results = new DistanceQueue(query, k); //创建一个优先队列，需要两个参数：排序标准和队列最大长度
+
+    while (toSearch.length > 0) {
+        // 从搜索列表中弹出一个结点，然后搜索。
+        var currentNode = toSearch.splice(0, 1)[0];//splice(index,howmany):删除从index处开始的howmany个元素，返回被删除的元素；
+													此处先取列表中第一个元素，然后将列表中该元素删除。
+        var dist = query.dist(currentNode.vp);//计算该结点的vp到查询点的距离
+
+        // 若该结点的vp在查询点的范围tau内，则直接加入该点，并更新tau；
+        if (dist < tau) {//对应于图2的情况
+            results.push(currentNode.vp);//插入该点
+            var farthest = results.last();//farthest为列表中最后一个点，也就是列表中到查询点距离最远的点
+            tau = query.dist(farthest);//将tau更新为farthest
+        }
+
+        // tau的一部分区域在mu中，所以要检查左子树。
+		//对应于图3的情况
+        if (dist < currentNode.mu + tau) 
+            toSearch.push(currentNode.left);
+
+        // tau的一部分区域在mu外，所以要检查右子树。
+		//对应于图1和图3的情况
+        if (dist >= currentNode.mu - tau)
+            toSearch.push(currentNode.right);
+    }
+
+    return results;
+}
